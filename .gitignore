@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+
+# internal docs / working assets — never on the public site (same policy as
+# the other PurposeBuiltSystems add-in repos)
+SETUP.md
+LISTING.md
+SUBMISSION.md
+RESEARCH.md
+icon-source.png
+screenshot*.png

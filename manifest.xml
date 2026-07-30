@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  Roster Auditor - Outlook add-in (add-in only / XML manifest).
+
+  One task-pane button on the message-read ribbon. The pane cross-references
+  a group roster the signed-in user belongs to against participation signals
+  the user already possesses - bounced sends (NDRs), in-person attendance
+  they record, Teams attendance reports for meetings THEY organized, and
+  replies to their own group sends - then offers re-engagement drafts,
+  one-click removal (owned Microsoft 365 groups only), and a removal
+  recommendation CSV for Graph-read-only groups (classic distribution lists).
+
+  Sign-in uses nested app authentication (MSAL) - no backend. All Graph
+  scopes are delegated. Desktop/web only in v1 (roster review is a
+  desk-side ritual, not a phone task).
+-->
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
+  xsi:type="MailApp">
+
+  <Id>c5fc13f3-bf56-4903-b4b7-9d18fd211323</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>PurposeBuiltSystems</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Roster Auditor" />
+  <Description DefaultValue="Find the ghosts on your distribution lists and group rosters: cross-reference bounces, meeting attendance, and replies, then re-engage or remove with confidence." />
+  <IconUrl DefaultValue="https://purposebuiltsystems.github.io/roster-auditor/assets/icon-64.png" />
+  <HighResolutionIconUrl DefaultValue="https://purposebuiltsystems.github.io/roster-auditor/assets/icon-128.png" />
+  <SupportUrl DefaultValue="https://purposebuiltsystems.github.io/roster-auditor/support.html" />
+
+  <AppDomains>
+    <AppDomain>https://purposebuiltsystems.github.io</AppDomain>
+    <AppDomain>https://login.microsoftonline.com</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Mailbox" />
+  </Hosts>
+
+  <Requirements>
+    <Sets>
+      <Set Name="Mailbox" MinVersion="1.5" />
+    </Sets>
+  </Requirements>
+
+  <FormSettings>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://purposebuiltsystems.github.io/roster-auditor/src/taskpane/taskpane.html" />
+        <RequestedHeight>250</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+
+  <!-- ReadItem only: the pane never reads the open message; all data access
+       happens via delegated Graph scopes. -->
+  <Permissions>ReadItem</Permissions>
+
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read" />
+  </Rule>
+  <DisableEntityHighlighting>false</DisableEntityHighlighting>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Requirements>
+      <bt:Sets DefaultMinVersion="1.5">
+        <bt:Set Name="Mailbox" />
+      </bt:Sets>
+    </Requirements>
+
+    <Hosts>
+      <Host xsi:type="MailHost">
+        <DesktopFormFactor>
+          <ExtensionPoint xsi:type="MessageReadCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="rosterAuditorGroup">
+                <Label resid="GroupLabel" />
+                <Control xsi:type="Button" id="openRosterAuditorButton">
+                  <Label resid="ButtonLabel" />
+                  <Supertip>
+                    <Title resid="ButtonLabel" />
+                    <Description resid="ButtonTip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16" />
+                    <bt:Image size="32" resid="Icon.32" />
+                    <bt:Image size="80" resid="Icon.80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url" />
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16" DefaultValue="https://purposebuiltsystems.github.io/roster-auditor/assets/icon-16.png" />
+        <bt:Image id="Icon.32" DefaultValue="https://purposebuiltsystems.github.io/roster-auditor/assets/icon-32.png" />
+        <bt:Image id="Icon.80" DefaultValue="https://purposebuiltsystems.github.io/roster-auditor/assets/icon-80.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://purposebuiltsystems.github.io/roster-auditor/src/taskpane/taskpane.html" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="GroupLabel" DefaultValue="Roster Auditor" />
+        <bt:String id="ButtonLabel" DefaultValue="Roster Auditor" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="ButtonTip" DefaultValue="Cross-reference a group roster against bounces, meeting attendance, and replies, then re-engage or remove non-participating members." />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

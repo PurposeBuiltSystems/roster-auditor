@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support — Roster Auditor</title>
+  <style>
+    body { font-family: -apple-system, Segoe UI, sans-serif; margin: 3rem auto; max-width: 44rem; padding: 0 1rem; color: #242424; line-height: 1.55; }
+    h1 { color: #0f6cbd; }
+    h2 { margin-top: 2rem; }
+    code { background: #f3f2f1; padding: 0.1rem 0.3rem; border-radius: 3px; }
+    .muted { color: #616161; }
+  </style>
+</head>
+<body>
+  <h1>Support</h1>
+  <p class="muted">Add-in: <strong>Roster Auditor</strong></p>
+
+  <h2>What it does</h2>
+  <p>Cross-references a group roster you belong to against four participation
+     signals — bounced sends, in-person attendance you record, Teams attendance
+     for meetings you organized, and replies to your group sends — then lets you
+     re-engage, remove (owned Microsoft 365 groups), or export a removal
+     recommendation CSV (distribution lists).</p>
+
+  <h2>How to use it</h2>
+  <ol>
+    <li>Open any email and click <strong>Roster Auditor</strong> on the ribbon.</li>
+    <li>Click <strong>Load my groups</strong>, sign in if prompted, and pick a
+        group. The line under the picker tells you what kind of group it is and
+        whether one-click removal is available.</li>
+    <li>Click <strong>Audit roster</strong>. Members appear sorted for review:
+        bouncing addresses first, then "engagement unknown," then active
+        members, stalest first.</li>
+    <li>Optionally record in-person attendance: open
+        <strong>Record in-person attendance</strong>, pick the meeting date, and
+        click <strong>Present ✓</strong> on each attendee. It counts as a
+        participation signal on every future audit.</li>
+    <li>Check the members you want to act on, then <strong>Re-engage</strong>
+        (drafts a polite "are you still active?" email), <strong>Remove</strong>
+        (two clicks — arm, then confirm), or <strong>CSV</strong>.</li>
+  </ol>
+
+  <h2>Frequently asked</h2>
+  <p><strong>Why is Remove disabled?</strong> Microsoft's API only allows member
+     removal on Microsoft 365 groups you own. Classic distribution lists and
+     mail-enabled security groups are read-only — export the CSV instead; it
+     includes a ready-made <code>Remove-DistributionGroupMember</code> PowerShell
+     line per member for your Exchange admin.</p>
+  <p><strong>Why doesn't Teams attendance show for a meeting?</strong> Attendance
+     reports exist only for meetings <em>you organized</em>, only when attendance
+     reporting was enabled, and Microsoft retains a limited number of session
+     reports. Missing data counts as "no signal," never as absence.</p>
+  <p><strong>A member shows "engagement unknown" but I know they're active.</strong>
+     That's expected — the add-in can only see the signals it scans. Use
+     <strong>Present ✓</strong> to record what you know, or simply leave them be:
+     nothing is ever removed without your explicit confirmation.</p>
+  <p><strong>Sign-in fails or permissions are declined.</strong> Some of the
+     scopes (notably group management) may require your Microsoft 365
+     administrator's consent. Ask your admin, or use the add-in's report-only
+     features on groups where consent succeeded.</p>
+
+  <h2>Contact</h2>
+  <p>Bugs and questions:
+     <a href="mailto:Matthew@purposebuilt.systems">Matthew@purposebuilt.systems</a>
+     · Issues and pull requests welcome on
+     <a href="https://github.com/PurposeBuiltSystems/roster-auditor">GitHub</a>.</p>
+</body>
+</html>

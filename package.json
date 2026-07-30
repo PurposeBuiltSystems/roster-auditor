@@ -1,0 +1,15 @@
+{
+  "name": "roster-auditor",
+  "version": "1.0.0",
+  "description": "Outlook add-in that cross-references a group roster against bounces, meeting attendance, and replies, then re-engages or removes non-participating members.",
+  "private": true,
+  "scripts": {
+    "validate": "office-addin-manifest validate manifest.xml",
+    "test": "node test/auditor.test.js"
+  },
+  "author": "Matthew Miller",
+  "license": "MIT",
+  "devDependencies": {
+    "office-addin-manifest": "^2.0.4"
+  }
+}

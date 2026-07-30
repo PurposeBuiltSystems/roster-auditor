@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roster Auditor — find the ghosts on your group rosters</title>
+  <meta name="description" content="Outlook add-in that cross-references a group roster against bounced sends, meeting attendance, and replies — then re-engages or removes non-participating members. No data collection." />
+  <style>
+    body { font-family: -apple-system, Segoe UI, sans-serif; margin: 3rem auto; max-width: 44rem; padding: 0 1rem; color: #242424; line-height: 1.55; }
+    h1 { color: #0f6cbd; margin-bottom: 0.2rem; }
+    h2 { margin-top: 2rem; }
+    .tagline { color: #616161; font-size: 1.1rem; margin-top: 0; }
+    .badge { display: inline-block; background: #eff6fc; color: #0c5aa0; border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.85rem; margin: 0.15rem 0.25rem 0.15rem 0; }
+    img.icon { width: 96px; height: 96px; float: right; margin: 0 0 1rem 1rem; }
+    footer { margin-top: 3rem; color: #616161; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <img class="icon" src="assets/icon-128.png" alt="Roster Auditor icon" />
+  <h1>Roster Auditor</h1>
+  <p class="tagline">Distribution lists and committee rosters rot. Find the ghosts — with evidence — and clean up with confidence.</p>
+
+  <p>
+    <span class="badge">Roster hygiene</span>
+    <span class="badge">Bounce detection</span>
+    <span class="badge">Attendance cross-reference</span>
+    <span class="badge">No data collection</span>
+    <span class="badge">Free</span>
+  </p>
+
+  <h2>Why</h2>
+  <p>Every group accumulates members who left, changed addresses, or silently
+     disengaged: sends bounce, quorums fail, and nobody has the evidence to
+     justify a cleanup. The data exists — in your bounce-backs, your meeting
+     attendance, your sent mail — but nothing cross-references it against the
+     roster. Roster Auditor does, entirely inside your Microsoft 365 session.</p>
+
+  <h2>What it does</h2>
+  <ul>
+    <li><strong>Cross-references four signals</strong> — bounced sends (NDRs:
+        the address is dead, not just quiet), in-person attendance you record,
+        Teams attendance reports for meetings <em>you organized</em>, and
+        replies to emails you sent the group.</li>
+    <li><strong>Shows evidence, not scores</strong> — each member gets a
+        last-seen date and the signal behind it. No signal shows as
+        "engagement unknown," never "inactive": quiet readers aren't ghosts.</li>
+    <li><strong>Re-engages first</strong> — one click drafts a polite "are you
+        still an active member?" email to the members you select.</li>
+    <li><strong>Removes with confidence</strong> — one-click removal for
+        Microsoft 365 groups you own; for classic distribution lists (which
+        Microsoft's API makes read-only) it exports a removal-recommendation
+        CSV with a ready-made Exchange PowerShell line per member for your
+        admin.</li>
+  </ul>
+
+  <h2>Privacy</h2>
+  <p>No servers, no accounts, no analytics, no AI. Every signal is something
+     you already legitimately possess — your own mail, your own meetings'
+     attendance reports, your own sign-in sheets. Nothing leaves the
+     Microsoft 365 boundary, and a human confirms every action.</p>
+
+  <h2>Get it</h2>
+  <p>Coming to Microsoft AppSource. Until then, the manifest in the
+     <a href="https://github.com/PurposeBuiltSystems/roster-auditor">GitHub
+     repository</a> can be sideloaded or centrally deployed by your admin.</p>
+
+  <footer>
+    <p>Built by PurposeBuilt Systems ·
+       <a href="privacy-policy.html">Privacy</a> ·
+       <a href="terms.html">Terms</a> ·
+       <a href="support.html">Support</a></p>
+  </footer>
+</body>
+</html>

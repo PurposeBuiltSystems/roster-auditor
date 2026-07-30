@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roster Auditor</title>
+
+  <!-- Office.js -->
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <!-- MSAL Browser (provides createNestablePublicClientApplication for NAA) -->
+  <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.1/lib/msal-browser.min.js"></script>
+
+  <link rel="stylesheet" href="taskpane.css" />
+</head>
+<body>
+  <header class="app-head">
+    <h1>Roster Auditor</h1>
+    <p class="sub">Cross-reference a group's roster against bounces, meeting attendance, and replies — then re-engage or remove the ghosts.</p>
+  </header>
+
+  <section class="controls">
+    <button id="loadGroups" class="primary">Load my groups</button>
+    <div id="groupRow" class="group-row" hidden>
+      <select id="groupSelect"></select>
+      <div id="groupKind" class="group-kind"></div>
+    </div>
+    <details id="options" class="options">
+      <summary>Options</summary>
+      <div class="row">
+        <label>Months back
+          <input id="monthsBack" type="number" min="1" max="12" value="6" />
+        </label>
+        <label>Large send = # of members
+          <input id="largeSendMin" type="number" min="2" max="20" value="3" />
+        </label>
+      </div>
+      <p class="hint">Signals scanned: bounced sends (definitive), in-person attendance you record below, Teams attendance for meetings <em>you organized</em>, and replies to emails you sent the group. No signal shows as “engagement unknown” — a member who reads quietly is not a ghost, so you confirm every action.</p>
+    </details>
+    <button id="audit" class="primary" disabled>Audit roster</button>
+  </section>
+
+  <section id="status" class="status" hidden></section>
+
+  <section id="results" class="results" hidden>
+    <details id="manualBox" class="options">
+      <summary>Record in-person attendance</summary>
+      <div class="row">
+        <label>Meeting date
+          <input id="manualDate" type="date" />
+        </label>
+      </div>
+      <p class="hint">Pick the date, then click “Present” on each member who attended. Saved to your mailbox settings and counted as a participation signal on every future audit.</p>
+    </details>
+
+    <div class="actions">
+      <button id="draftBtn" disabled>✉️ Re-engage (0)</button>
+      <button id="removeBtn" disabled>🗑 Remove (0)</button>
+      <button id="csvSelBtn" disabled>CSV (0)</button>
+      <button id="csvAllBtn">Full CSV</button>
+    </div>
+
+    <div id="items"></div>
+
+    <details class="options">
+      <summary>Recent actions</summary>
+      <div id="auditLog" class="audit-log"></div>
+    </details>
+  </section>
+
+  <script src="../graph.js?v=1"></script>
+  <script src="../auditor.js?v=1"></script>
+  <script src="taskpane.js?v=1"></script>
+</body>
+</html>
