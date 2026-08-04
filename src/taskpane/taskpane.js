@@ -26,18 +26,31 @@
   var removeArmed = false;
 
   Office.onReady(function () {
-    byId("loadGroups").addEventListener("click", loadGroups);
-    byId("audit").addEventListener("click", audit);
-    byId("groupSelect").addEventListener("change", groupChanged);
-    byId("draftBtn").addEventListener("click", draftReengage);
-    byId("removeBtn").addEventListener("click", removeSelected);
-    byId("csvSelBtn").addEventListener("click", function () { exportCsv(true); });
-    byId("csvAllBtn").addEventListener("click", function () { exportCsv(false); });
+    on("loadGroups", "click", loadGroups);
+    on("audit", "click", audit);
+    on("groupSelect", "change", groupChanged);
+    on("draftBtn", "click", draftReengage);
+    on("removeBtn", "click", removeSelected);
+    on("csvSelBtn", "click", function () { exportCsv(true); });
+    on("csvAllBtn", "click", function () { exportCsv(false); });
     byId("manualDate").value = new Date().toISOString().slice(0, 10);
     renderLog();
   });
 
   function byId(id) { return document.getElementById(id); }
+
+  /**
+   * Outlook caches the pane HTML but the ?v= query string makes it fetch
+   * JavaScript fresh, so a returning user can run today's JS against
+   * yesterday's page. Binding through this helper means a missing element
+   * costs one feature instead of throwing and leaving every later button
+   * unbound — a whole dead pane.
+   */
+  function on(id, ev, fn) {
+    var el = byId(id);
+    if (el) { el.addEventListener(ev, fn); }
+    return el;
+  }
 
   function setStatus(kind, text) {
     var el = byId("status");
