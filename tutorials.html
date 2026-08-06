@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorial — Roster Auditor</title>
+  <style>
+    body { font-family: -apple-system, Segoe UI, sans-serif; margin: 3rem auto; max-width: 44rem; padding: 0 1rem; color: #242424; line-height: 1.6; }
+    h1 { color: #0f6cbd; } h2 { color: #0f6cbd; margin-top: 2.4rem; } h3 { margin-top: 1.6rem; }
+    .step { background: #f8f8f8; border-radius: 8px; padding: 10px 14px; margin: 8px 0; }
+    .step b { color: #0f6cbd; }
+    .note { background: #fff8e6; border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+    .lede { background: #eff6fc; border-radius: 8px; padding: 12px 16px; }
+    .see { border-left: 3px solid #0f6cbd; background: #f4f9fd; padding: 8px 14px; margin: 8px 0 14px; font-size: .95em; }
+    .see b { color: #0f6cbd; }
+    .wrong { border-left: 3px solid #c4314b; background: #fdf3f4; padding: 10px 14px; margin: 12px 0; }
+    .wrong b { color: #c4314b; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: .92em; }
+    th, td { border: 1px solid #d1d1d1; padding: 6px 10px; text-align: left; vertical-align: top; }
+    th { background: #eef4f6; }
+    code { background: #f0f0f0; padding: 1px 5px; border-radius: 4px; font-size: .92em; }
+    footer { margin-top: 3rem; color: #616161; font-size: .9em; }
+    @media print { body { margin: 0.5in; } }
+  </style>
+</head>
+<body>
+  <h1>Roster Auditor — Tutorial</h1>
+  <p class="lede">Committee rosters rot quietly. People retire, change agencies, or simply stop
+     coming, and nobody updates the list — so you keep mailing thirty addresses to reach
+     eighteen people. This finds the ghosts using signals you already possess.</p>
+
+  <h2>Tutorial — auditing a roster</h2>
+
+  <div class="step"><b>1.</b> Click <b>Roster Auditor</b> on the ribbon, then
+     <b>Load my groups</b>.</div>
+  <div class="see"><b>You should see</b> the Microsoft 365 groups and distribution lists you
+     belong to. If it comes back empty, your account isn't a member of any group Graph can see.</div>
+  <div class="step"><b>2.</b> Pick a group, set <b>Months back</b>, and click
+     <b>Audit roster</b>.</div>
+  <div class="see"><b>You should see</b> each member with a <b>last-seen date and the evidence
+     behind it</b> — and bouncing addresses at the top.</div>
+
+  <h2>The four signals, and how much each is worth</h2>
+  <table>
+    <tr><th>Signal</th><th>Strength</th></tr>
+    <tr><td><b>Bounced sends (NDRs)</b></td>
+        <td><b>Definitive.</b> The address is dead, not merely quiet. This is the only signal
+            that proves something rather than suggesting it, so bounces sort first.</td></tr>
+    <tr><td><b>In-person attendance you record</b></td>
+        <td><b>Strong.</b> You marked them present. Stored in your own mailbox settings.</td></tr>
+    <tr><td><b>Teams meeting attendance</b></td>
+        <td><b>Strong, but partial.</b> Attendance reports exist only for meetings <b>you
+            organised</b> — a platform rule, not a design choice. The add-in can never observe
+            anyone else's meetings.</td></tr>
+    <tr><td><b>Replies to your group sends</b></td>
+        <td><b>Weak — display only.</b> Never used to recommend removal. Someone who reads
+            everything and replies to nothing is not a ghost; they're a lurker, and plenty of
+            committee members are supposed to be exactly that.</td></tr>
+  </table>
+
+  <div class="note"><b>A member with no signal at all shows as "engagement unknown" — never
+     "inactive."</b> Absence of evidence in your mailbox is not evidence of absence from the
+     committee. They may participate entirely through a colleague, by phone, or in meetings you
+     don't organise. The wording is deliberate, because "inactive" invites someone to act on a
+     silence the tool never actually observed.</div>
+
+  <h3>Recording in-person attendance</h3>
+  <div class="step">After a sign-in-sheet meeting, open <b>Record in-person attendance</b>, set
+     the <b>Meeting date</b>, and tick everyone present.</div>
+  <p>This is the signal that rescues people the digital ones miss — the member who never emails
+     and never misses a meeting. Two or three sessions recorded makes the audit dramatically
+     fairer.</p>
+
+  <h2>Acting on it</h2>
+
+  <h3>Re-engage — the default, and usually the right one</h3>
+  <div class="step">Select the members you're unsure about and click <b>✉️ Re-engage</b>. A
+     polite "are you still an active member?" email is drafted for you to review and send.</div>
+  <p>This is first for a reason. It converts a guess into an answer, and it gives someone the
+     chance to say "yes, and I'd like to stay" before anyone removes them from anything.</p>
+
+  <h3>Remove — only where you own the group</h3>
+  <div class="step">Select, click <b>🗑 Remove</b>, then click <b>Confirm remove</b>. Two clicks,
+     deliberately.</div>
+  <div class="wrong"><b>Only available on Microsoft 365 groups you own.</b> Classic distribution
+     lists and mail-enabled security groups are <b>read-only through Microsoft Graph</b> — they're
+     mastered in Exchange. That's a Microsoft limitation, not something a permission can unlock.</div>
+
+  <h3>CSV — the path for distribution lists</h3>
+  <div class="step">Use <b>CSV</b> for the selected members or <b>Full CSV</b> for everyone.</div>
+  <p>You get member, status, evidence, and a ready-made
+     <code>Remove-DistributionGroupMember</code> PowerShell line per row — hand it to your
+     Exchange admin and they can act without re-deriving your reasoning.</p>
+  <div class="note"><b>Copy the CSV out of the box on screen.</b> Outlook blocks file downloads
+     from add-in panes, so it's presented as text to select and copy rather than as a download
+     that would silently fail.</div>
+
+  <h2>One setting worth understanding</h2>
+  <p><b>Large send = # of members.</b> This is how the add-in recognises that a message was sent
+     <em>to the group</em> rather than to a few individuals — a send is treated as a group send
+     when it reaches at least this many recipients. Set it too low and ordinary team emails get
+     counted as group sends, which makes the reply signal noisy.</p>
+
+  <h2>What it never does</h2>
+  <p>It never removes anyone without you selecting them and confirming twice. It has no backend,
+     no analytics, and no AI. All Graph access is delegated — it sees only what you can already
+     see — and nothing leaves the Microsoft 365 boundary.</p>
+
+  <footer>
+    <a href="index.html">Overview</a> ·
+    <a href="support.html">Support</a> ·
+    <a href="privacy-policy.html">Privacy</a><br />
+    PurposeBuilt Systems · Roster Auditor
+  </footer>
+</body>
+</html>
