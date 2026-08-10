@@ -25,7 +25,53 @@
   var rows = [];
   var removeArmed = false;
 
+  /**
+   * Account row. Certification policy 1100.5.7.1 requires a visible way out
+   * wherever an add-in signs a user in. Every element access is guarded:
+   * Outlook desktop caches the pane HTML while ?v= fetches fresh JS, so this
+   * code can run against a page that predates these controls, and an
+   * unguarded dereference here would throw inside Office.onReady and take
+   * the whole pane down as "Add-in Error".
+   */
+  function authSet(id, k, v) { var e = document.getElementById(id); if (e) { e[k] = v; } }
+
+  async function renderAuthState() {
+    var who = null;
+    try { who = await GraphData.currentAccount(); } catch (e) { who = null; }
+    authSet("authWho", "textContent", who ? ("Signed in as " + who) : "Not signed in");
+    authSet("signOut", "hidden", !who);
+    authSet("signIn", "hidden", !!who);
+  }
+
+  async function doSignIn() {
+    authSet("signIn", "disabled", true);
+    try { await GraphData.getToken(); }
+    catch (e) { authSet("authWho", "textContent", "Sign-in failed: " + ((e && e.message) || e)); }
+    finally { authSet("signIn", "disabled", false); renderAuthState(); }
+  }
+
+  async function doSignOut() {
+    authSet("signOut", "disabled", true);
+    try {
+      await GraphData.signOut();
+      authSet("authWho", "textContent", "Signed out \u2014 this add-in's saved tokens are cleared. " +
+        "Your Outlook session is separate and is not affected; no add-in can end it.");
+    } catch (e) {
+      authSet("authWho", "textContent", "Sign-out failed: " + ((e && e.message) || e));
+    } finally {
+      authSet("signOut", "disabled", false);
+      setTimeout(renderAuthState, 2500);
+    }
+  }
+
+
   Office.onReady(function () {
+    // Certification 1100.5.7.1 - sign-out must be reachable.
+    var _si = document.getElementById("signIn");
+    if (_si) { _si.addEventListener("click", doSignIn); }
+    var _so = document.getElementById("signOut");
+    if (_so) { _so.addEventListener("click", doSignOut); }
+    renderAuthState();
     on("loadGroups", "click", loadGroups);
     on("audit", "click", audit);
     on("groupSelect", "change", groupChanged);
@@ -33,11 +79,25 @@
     on("removeBtn", "click", removeSelected);
     on("csvSelBtn", "click", function () { exportCsv(true); });
     on("csvAllBtn", "click", function () { exportCsv(false); });
-    byId("manualDate").value = new Date().toISOString().slice(0, 10);
+    setVal("manualDate", new Date().toISOString().slice(0, 10));
     renderLog();
   });
 
   function byId(id) { return document.getElementById(id); }
+
+  /**
+   * Guarded element access. Outlook desktop caches the pane HTML far harder
+   * than the web client while ?v= still fetches today's JavaScript, so startup
+   * routinely runs new code against an old page. One unguarded
+   * `byId(x).value` there throws inside Office.onReady, and Outlook reports
+   * that as "Add-in Error" - the whole pane, not one field. This is the exact
+   * cause of certification finding 1120.3.7.8 on a sibling add-in.
+   */
+  function setVal(id, v) { var el = byId(id); if (el) { el.value = v; } }
+  function setProp(id, k, v) { var el = byId(id); if (el) { el[k] = v; } }
+  function setAttrIf(id, n, v) { var el = byId(id); if (el) { el.setAttribute(n, v); } }
+  function rmAttrIf(id, n) { var el = byId(id); if (el) { el.removeAttribute(n); } }
+  function isChecked(id) { var el = byId(id); return !!(el && el.checked); }
 
   /**
    * Outlook caches the pane HTML but the ?v= query string makes it fetch
@@ -107,6 +167,7 @@
 
   function renderLog() {
     var host = byId("auditLog");
+    if (!host) { return; }          // stale cached page: skip, don't kill the pane
     var entries = readJson(LOG_KEY, []);
     host.innerHTML = "";
     if (!entries.length) { host.textContent = "No actions recorded yet."; return; }

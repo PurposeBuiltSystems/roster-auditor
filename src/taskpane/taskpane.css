@@ -124,3 +124,16 @@ button.danger-armed { background: var(--error-bg); border-color: var(--error-fg)
   .options summary { padding: 12px 0; }
   button { min-height: 44px; font-size: 15px; }
 }
+
+
+/* Account row - certification 1100.5.7.1 requires a visible way out
+   wherever the add-in signs a user in. Kept on the first screen. */
+.auth-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 4px 0 10px; font-size: 12.5px; opacity: .9; }
+/* min-width:0 is required for ellipsis to work on a flex child, and the row
+   must wrap rather than overflow: six of these add-ins declare a mobile form
+   factor, where the pane is phone-width and an address can be long. */
+.auth-row #authWho { flex: 1 1 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Tap target, not just a text link — mobile design review looks at this. */
+button.linkish { background: none; border: none; padding: 8px 4px; min-height: 32px; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; opacity: .85; }
+button.linkish:hover { opacity: 1; }
+button.linkish:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 3px; }
