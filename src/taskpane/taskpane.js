@@ -116,6 +116,24 @@
     return el;
   }
 
+  /**
+   * roamingSettings caps at 32 KB across everything this add-in stores. Over
+   * that, saveAsync FAILS - and a callback that ignores asyncResult.status
+   * turns a failure into silent data loss: the user believes it saved. Every
+   * write of real user data goes through here so a failure is at least said
+   * out loud.
+   */
+  function persistSettings(what) {
+    Office.context.roamingSettings.saveAsync(function (r) {
+      if (r && r.status !== Office.AsyncResultStatus.Succeeded) {
+        setStatus("error", "Couldn't save " + (what || "your settings") +
+          " \u2014 you may be at the 32 KB limit Outlook allows an add-in. " +
+          "Recent changes may not survive a restart.");
+      }
+    });
+  }
+
+
   function setStatus(kind, text) {
     var el = byId("status");
     if (!text) { el.hidden = true; return; }
@@ -136,7 +154,7 @@
   function writeJson(key, value) {
     try {
       Office.context.roamingSettings.set(key, JSON.stringify(value));
-      Office.context.roamingSettings.saveAsync(function () {});
+      persistSettings("your recorded attendance");
     } catch (e) { /* session-only */ }
   }
 
