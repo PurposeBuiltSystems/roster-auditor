@@ -68,6 +68,9 @@ function load(fetcher) {
     const foreign = load(() => response(200, { value: [], "@odata.nextLink": "https://evil.example/steal" }));
     await assert.rejects(foreign.transport.graphAll("token", "/me"), /unsupported paging URL/);
     assert.equal(foreign.calls.length, 1, "no bearer token sent to foreign paging host");
+    const spaces = load(() => response(200, {value: []}));
+    await spaces.transport.graphAll("token", "/me/messages?$filter=receivedDateTime ge 2026-01-01T00:00:00Z");
+    assert.equal(spaces.calls.length, 1, "valid initial OData queries may contain spaces");
     const capped = load(() => response(200, { value: [], "@odata.nextLink": "https://graph.microsoft.com/v1.0/me?next=1" }));
     await assert.rejects(capped.transport.graphAll("token", "/me"), /scan limit/);
     assert.ok(capped.calls.length <= 100);

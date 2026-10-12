@@ -15,5 +15,10 @@ function load(pca) {
  let finish;let entered; const started=new Promise(r=>entered=r);
  const race=load({getAllAccounts:()=>[],acquireTokenSilent:()=>{entered();return new Promise(r=>finish=r)},acquireTokenPopup:async()=>{throw Error('must not open popup after sign out')}});
  const pending=race.getToken();await started;await race.signOut();finish({accessToken:'stale'});await assert.rejects(pending,/cancelled/);assert.equal(await race.currentAccount(),null);
+ let completePopup; let popupEntered;
+ const popupStarted = new Promise(r=>popupEntered=r);
+ const popupRace=load({getAllAccounts:()=>[],acquireTokenSilent:async()=>{throw Error('interaction required')},acquireTokenPopup:()=>{popupEntered();return new Promise(r=>completePopup=r)}});
+ const popupPending=popupRace.getToken(); await popupStarted; await popupRace.signOut(); completePopup({accessToken:'stale popup'});
+ await assert.rejects(popupPending,/cancelled/); assert.equal(popupRace.isSignedOut(),true);
  console.log('Authentication state and sign-out race regressions passed.');
 })().catch(e=>{console.error(e);process.exitCode=1});

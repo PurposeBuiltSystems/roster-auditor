@@ -211,7 +211,7 @@
     var url = GRAPH + path;
     var guard = 0;
     while (url && guard++ < (cap || 30)) {
-      if (!/^https:\/\/graph\.microsoft\.com\/v1\.0\//i.test(url) || /[\u0000-\u0020]/.test(url)) {
+      if (!/^https:\/\/graph\.microsoft\.com\/v1\.0\//i.test(url) || /[\u0000-\u001f]/.test(url)) {
         throw new Error("Graph returned an unsupported paging URL.");
       }
       var res = await fetchRetry(url, { headers: { Authorization: "Bearer " + token } });
