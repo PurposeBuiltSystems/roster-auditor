@@ -45,7 +45,7 @@
     } else if (unified) {
       kind = "m365";
       writable = owned;
-      label = owned ? "Microsoft 365 group (you own it — one-click remove)"
+      label = owned ? "Microsoft 365 group (you own it — confirmed removal)"
                     : "Microsoft 365 group (not owner — export CSV)";
     } else if (g.mailEnabled && g.securityEnabled) {
       kind = "mailSecurity";
@@ -226,7 +226,9 @@
 
   function csvEscape(v) {
     var s = String(v == null ? "" : v);
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    // Keep untrusted text from becoming a formula when opened in Excel.
+    if (typeof v !== "number" && /^[\s\uFEFF]*[=+@-]/.test(s)) { s = "'" + s; }
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   }
 
   /**
@@ -238,10 +240,10 @@
     var header = ["email", "name", "status", "last_seen", "signal",
       "bounce_date", "bounce_subject", "exchange_powershell"];
     var lines = [header.join(",")];
-    var psq = function (s) { return String(s).replace(/"/g, '""'); }; // "" escapes " in PS double-quoted strings
+    var psq = function (s) { return "'" + String(s).replace(/'/g, "''") + "'"; }; // literal PowerShell arguments: no variable or command expansion
     (rows || []).forEach(function (r) {
-      var ps = 'Remove-DistributionGroupMember -Identity "' + psq(groupName) +
-        '" -Member "' + psq(r.email) + '" -Confirm:$false';
+      var ps = "Remove-DistributionGroupMember -Identity " + psq(groupName) +
+        " -Member " + psq(r.email) + " -Confirm:$false";
       lines.push([
         r.email,
         r.name,

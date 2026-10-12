@@ -172,7 +172,7 @@ check("csv bounced row core",
   lines[1].indexOf("dan@example.com,Dan Poe,bounced,never seen,,2026-07-10") === 0,
   true);
 check("csv PowerShell line quoted (group name has comma+quotes)",
-  lines[1].indexOf('Remove-DistributionGroupMember -Identity ""Committee, """"Main""""""') !== -1,
+  lines[1].indexOf("Remove-DistributionGroupMember -Identity 'Committee, \"\"Main\"\"'") !== -1,
   true);
 check("csv unknown row shows never seen",
   lines[2].indexOf("bob@example.com,Bob Ray,unknown,never seen") === 0,
@@ -180,6 +180,13 @@ check("csv unknown row shows never seen",
 
 check("csvEscape comma", A._internals.csvEscape("a,b"), '"a,b"');
 check("csvEscape quote", A._internals.csvEscape('say "hi"'), '"say ""hi"""');
+
+// CSV formulas and PowerShell expansion must remain literal user text.
+check("csvEscape formula", A._internals.csvEscape("=1+1"), "'=1+1");
+check("csvEscape whitespace formula", A._internals.csvEscape("\t@SUM(1)"), "'\t@SUM(1)");
+check("csvEscape CR", A._internals.csvEscape("a\rb"), '"a\rb"');
+var literal = A.buildRemovalCsv([rows[0]], "O'Hare $(Get-Process) `$HOME");
+check("PowerShell arguments use literal quoting", literal.indexOf("-Identity 'O''Hare $(Get-Process) `$HOME' -Member 'dan@example.com'") !== -1, true);
 
 if (failures) {
   console.error("\n" + failures + " auditor test(s) FAILED");

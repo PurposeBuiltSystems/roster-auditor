@@ -24,6 +24,7 @@
   var current = null; // { group, meta }
   var rows = [];
   var removeArmed = false;
+  var busy = false;
 
   /**
    * Account row. Certification policy 1100.5.7.1 requires a visible way out
@@ -202,7 +203,17 @@
 
   /* ----------------------------------------------------------------- groups */
 
+  function setBusy(value) {
+    busy = value;
+    byId("loadGroups").disabled = busy;
+    byId("groupSelect").disabled = busy;
+    byId("audit").disabled = busy || !current;
+    if (current) { updateActions(); }
+  }
+
   async function loadGroups() {
+    if (busy) { return; }
+    setBusy(true);
     byId("loadGroups").disabled = true;
     setStatus("work", "Loading the groups you belong to…");
     try {
@@ -223,6 +234,7 @@
         return;
       }
       byId("groupRow").hidden = false;
+      busy = false;
       groupChanged();
       setStatus("info", groups.length + " groups loaded. Pick one and audit.");
     } catch (e) {
@@ -232,11 +244,14 @@
       }
       setStatus("error", "Could not load groups: " + msg);
     } finally {
-      byId("loadGroups").disabled = false;
+      setBusy(false);
+      renderAuthState();
     }
   }
 
   function groupChanged() {
+    if (busy) { return; }
+    removeArmed = false;
     var g = groups[parseInt(byId("groupSelect").value, 10) || 0];
     if (!g) { return; }
     var meta = RosterAuditor.classifyGroup(g, ownedIds);
@@ -250,7 +265,8 @@
   /* ------------------------------------------------------------------ audit */
 
   async function audit() {
-    if (!current) { return; }
+    if (!current || busy) { return; }
+    setBusy(true);
     var months = Math.max(1, Math.min(12, parseInt(byId("monthsBack").value, 10) || 6));
     var daysBack = months * 30;
     var largeSendMin = Math.max(2, Math.min(20, parseInt(byId("largeSendMin").value, 10) || 3));
@@ -302,7 +318,8 @@
     } catch (e) {
       setStatus("error", "Audit failed: " + ((e && e.message) || e));
     } finally {
-      byId("audit").disabled = false;
+      setBusy(false);
+      renderAuthState();
     }
   }
 
@@ -327,15 +344,15 @@
     var n = selected().length;
     var w = current && current.meta.writable;
     byId("draftBtn").textContent = "✉️ Re-engage (" + n + ")";
-    byId("draftBtn").disabled = !n;
+    byId("draftBtn").disabled = busy || !n;
     var rb = byId("removeBtn");
     rb.textContent = removeArmed ? "Confirm remove (" + n + ")" : "🗑 Remove (" + n + ")";
     rb.className = removeArmed ? "danger-armed" : "";
-    rb.disabled = !n || !w;
+    rb.disabled = busy || !n || !w;
     rb.title = w ? "Remove the selected members from this Microsoft 365 group"
       : "This group type is read-only via Graph — use the CSV export for your Exchange admin.";
     byId("csvSelBtn").textContent = "CSV (" + n + ")";
-    byId("csvSelBtn").disabled = !n;
+    byId("csvSelBtn").disabled = busy || !n;
   }
 
   function render() {
@@ -412,7 +429,8 @@
 
   async function draftReengage() {
     var sel = selected();
-    if (!sel.length) { return; }
+    if (!sel.length || busy) { return; }
+    setBusy(true);
     byId("draftBtn").disabled = true;
     setStatus("work", "Creating the re-engagement draft…");
     try {
@@ -421,7 +439,7 @@
       var subject = "Are you still an active member of “" + gname + "”?";
       var body =
         "<p>Hi,</p>" +
-        "<p>I'm tidying up the membership roster for <b>" + gname + "</b> and I " +
+        "<p>I'm tidying up the membership roster for <b>" + gname.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</b> and I " +
         "haven't seen recent participation from you — that may simply mean the " +
         "list has your details wrong, or that you follow along without replying.</p>" +
         "<p>Could you reply to let me know whether you'd like to stay on the " +
@@ -439,14 +457,14 @@
     } catch (e) {
       setStatus("error", "Could not create the draft: " + ((e && e.message) || e));
     } finally {
-      byId("draftBtn").disabled = false;
-      updateActions();
+      setBusy(false);
+      renderAuthState();
     }
   }
 
   async function removeSelected() {
     var sel = selected();
-    if (!sel.length || !current.meta.writable) { return; }
+    if (busy || !sel.length || !current.meta.writable) { return; }
     if (!removeArmed) { // first click arms; second click executes
       removeArmed = true;
       updateActions();
@@ -455,6 +473,7 @@
       return;
     }
     removeArmed = false;
+    setBusy(true);
     byId("removeBtn").disabled = true;
     var ok = 0, failed = [];
     try {
@@ -481,7 +500,8 @@
     } catch (e) {
       setStatus("error", "Removal failed: " + ((e && e.message) || e));
     } finally {
-      updateActions();
+      setBusy(false);
+      renderAuthState();
     }
   }
 
