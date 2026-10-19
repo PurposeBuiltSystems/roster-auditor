@@ -44,9 +44,11 @@ Same shape as the other PurposeBuilt add-ins:
   parsing, group-send detection, signal merge, CSV builder). No Office.js,
   no DOM — unit-tested under Node.
 - `src/graph.js` — Microsoft Graph data layer; MSAL nested app auth (NAA),
-  no backend. Delegated scopes: `Group.Read.All`, `Group.ReadWrite.All`,
+  no backend. Delegated scopes: `User.Read`, `Group.Read.All`, `Group.ReadWrite.All`,
   `Mail.ReadWrite`, `Calendars.Read`, `OnlineMeetings.Read`,
   `OnlineMeetingArtifact.Read.All`.
+  `User.Read` is required for the signed-in user's membership and ownership
+  endpoints; the group scopes alone do not authorize `/me/memberOf`.
 - `src/taskpane/` — the pane UI.
 - Hosted on GitHub Pages; the manifest points at the hosted files.
 

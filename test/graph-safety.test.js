@@ -32,6 +32,16 @@ function load(fetcher) {
   return { api: context.self.GraphData, transport: context.self.transport, calls, waits };
 }
 (async () => {
+  const groups = load((url, opts) => {
+    assert.equal(opts.headers.ConsistencyLevel, "eventual", "OData casts require advanced-query headers");
+    assert.ok(url.includes("$count=true"), "OData casts require a count");
+    return response(200, {value: url.includes("memberOf") ? [{id:"member",displayName:"Member group"}] : [{id:"owner",displayName:"Owned group"}]});
+  });
+  const memberships = await groups.api.myGroups("token");
+  assert.equal(memberships.groups.length,2);
+  assert.equal(memberships.ownedIds.owner,true);
+  const denied = load(() => response(403));
+  await assert.rejects(denied.api.myGroups("token"), /administrator.*Graph 403/);
   // Exercise retry behavior with fake timers, including date/invalid headers.
   for (const status of [429, 503]) {
     for (const header of ["2", null, "invalid", "0", "60", new Date(Date.now() + 60000).toUTCString()]) {

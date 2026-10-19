@@ -8,6 +8,17 @@ function load(pca) {
  return context.self.GraphData;
 }
 (async()=>{
+ // The certification tenant denied /me/memberOf with group scopes alone.
+ // Exercise both token paths: a cached token must be upgraded too.
+ for (const interactive of [false, true]) {
+   const requests=[];
+   const auth=load({getAllAccounts:()=>[],
+     acquireTokenSilent:async request=>{requests.push(request);if(interactive)throw Error('consent required');return {accessToken:'membership-token'}},
+     acquireTokenPopup:async request=>{requests.push(request);return {accessToken:'membership-token'}}});
+   assert.equal(await auth.getToken(),'membership-token');
+   assert.equal(requests.length,interactive?2:1);
+   for(const request of requests) assert.ok(request.scopes.includes('User.Read'),'membership calls need the signed-in user scope');
+ }
  let popups=0;
  const g=load({getAllAccounts:()=>[],acquireTokenSilent:async()=>({accessToken:'token',account:{username:'sample@example.org'}}),acquireTokenPopup:async()=>{popups++;return {accessToken:'interactive'}}});
  assert.equal(await g.getToken(),'token');assert.equal(await g.currentAccount(),'sample@example.org');

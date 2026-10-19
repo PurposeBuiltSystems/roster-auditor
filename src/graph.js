@@ -19,6 +19,7 @@
   var CLIENT_ID = "a29d3a83-ea45-47ca-b628-3a8ec45cd87d"; // "Roster Auditor" Entra app (purposebuilt.systems tenant)
   var GRAPH = "https://graph.microsoft.com/v1.0";
   var SCOPES = [
+    "User.Read",                   // /me/memberOf and /me/ownedObjects require a user permission
     "Group.Read.All",              // list groups + members
     "Group.ReadWrite.All",         // remove members (M365 groups the user owns)
     "Mail.ReadWrite",              // NDR scan, group-send scan, re-engagement draft
@@ -214,8 +215,13 @@
       if (!/^https:\/\/graph\.microsoft\.com\/v1\.0\//i.test(url) || /[\u0000-\u001f]/.test(url)) {
         throw new Error("Graph returned an unsupported paging URL.");
       }
-      var res = await fetchRetry(url, { headers: { Authorization: "Bearer " + token } });
-      if (!res.ok) { throw new Error("Graph GET " + url + " -> " + res.status); }
+      var res = await fetchRetry(url, { headers: { Authorization: "Bearer " + token, ConsistencyLevel: "eventual" } });
+      if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error("Microsoft denied access to this collection. Sign out of the add-in and sign in again to approve the current permissions. If your organization requires administrator approval, ask your Microsoft 365 administrator to approve Roster Auditor. (Graph 403)");
+        }
+        throw new Error("Graph GET " + url + " -> " + res.status);
+      }
       var page = await res.json();
       items = items.concat(page.value || []);
       url = page["@odata.nextLink"] || null;
@@ -231,10 +237,10 @@
   /** Groups the user belongs to, plus a set of the ids they OWN. DLs and
    *  mail-enabled security groups do appear in memberOf (read-only). */
   async function myGroups(token) {
-    var member = await graphAll(token, "/me/memberOf/microsoft.graph.group?" + GROUP_SELECT + "&$top=999");
+    var member = await graphAll(token, "/me/memberOf/microsoft.graph.group?" + GROUP_SELECT + "&$count=true&$top=999");
     var owned = [];
     try {
-      owned = await graphAll(token, "/me/ownedObjects/microsoft.graph.group?" + GROUP_SELECT + "&$top=999");
+      owned = await graphAll(token, "/me/ownedObjects/microsoft.graph.group?" + GROUP_SELECT + "&$count=true&$top=999");
     } catch (e) { /* ownedObjects can 403 in some tenants; owned stays empty */ }
     var ownedIds = {};
     owned.forEach(function (g) { ownedIds[g.id] = true; });
