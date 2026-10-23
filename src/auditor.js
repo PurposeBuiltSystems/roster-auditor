@@ -5,7 +5,7 @@
  * Inputs are plain objects shaped like Graph responses. The auditor
  * cross-references a group roster against four signals, strongest first:
  *
- *   1. bounce  — an NDR naming the member's address (definitive: address dead)
+ *   1. bounce  — a delivery-failure diagnostic identifying the member
  *   2. manual  — clerk-recorded in-person attendance
  *   3. teams   — attendance records from meetings the USER organized
  *   4. reply   — an inbound reply on a conversation the user sent to the group
@@ -68,29 +68,73 @@
   function stripHtml(html) {
     return String(html || "")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<br\s*\/?\s*>|<\/(?:p|div|tr|li)>/gi, "\n")
       .replace(/<[^>]+>/g, " ")
       .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
       .replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&nbsp;/g, " ");
   }
 
   /**
-   * Pull the failed recipient(s) out of one NDR message, restricted to
-   * addresses actually on the roster — an NDR mentions plenty of addresses
-   * (postmaster, the user, relay hosts); only a roster match is evidence.
+   * Read failed-recipient diagnostics, not arbitrary roster addresses in an
+   * NDR. Quoted original recipients can include people whose delivery worked.
+   * Unrecognized layouts produce no bounce evidence rather than a guess.
    * ndr: { subject, receivedDateTime, body: { content } } (bodyPreview ok too)
    */
   function ndrFailedRecipients(ndr, rosterEmails) {
     var rosterSet = {};
     (rosterEmails || []).forEach(function (e) { rosterSet[norm(e)] = true; });
-    var text = stripHtml((ndr.body && ndr.body.content) || ndr.bodyPreview || "") +
-      " " + (ndr.subject || "");
+    var text = stripHtml((ndr.body && ndr.body.content) || ndr.bodyPreview || "")
+      .replace(/\r\n?/g, "\n");
+    // A forwarded original is evidence of what was sent, not what failed.
+    text = text.split(/\bOriginal (?:message(?: headers)?|headers)\s*:|Content-Type:\s*message\/rfc822|-{3,}\s*(?:Original|Forwarded) message\s*-{3,}/i)[0];
     var seen = {};
     var hits = [];
-    (text.match(EMAIL_RE) || []).forEach(function (raw) {
+    function add(raw) {
       var e = norm(raw);
-      if (seen[e] || NDR_NOISE.test(e)) { return; }
+      if (seen[e] || NDR_NOISE.test(e) || !rosterSet[e]) { return; }
       seen[e] = true;
-      if (rosterSet[e]) { hits.push(e); }
+      hits.push(e);
+    }
+    // RFC 3464: each Final-Recipient starts a new recipient record. Only
+    // failed records count; delivered/delayed recipients must stay unflagged.
+    if (/^Final-Recipient:/im.test(text)) {
+      text.split(/(?=^Final-Recipient:)/im).forEach(function (block) {
+        var recipient = block.match(/^Final-Recipient:\s*[^;\n]+;\s*([^\n]+)/im);
+        if (!recipient || !/^Action:\s*failed\s*$/im.test(block)) { return; }
+        (recipient[1].match(EMAIL_RE) || []).forEach(add);
+      });
+      return hits;
+    }
+    var failureList = false;
+    text.split("\n").forEach(function (line) {
+      line = line.trim();
+      if (/^(?:Diagnostic information|Generating server|For (?:email )?admins|From:|To:|Cc:|Subject:)/i.test(line)) {
+        failureList = false;
+      }
+      // Outlook's human-readable NDR starts with a failure heading, then
+      // recipient-only lines. Do not collect addresses from explanatory prose.
+      if (/^Delivery (?:has )?failed to (?:these|the following) recipients(?: or groups)?\s*:/i.test(line)) {
+        failureList = true;
+        line = line.replace(/^Delivery (?:has )?failed to (?:these|the following) recipients(?: or groups)?\s*:/i, "").trim();
+      }
+      if (failureList && line) {
+        var addresses = line.match(EMAIL_RE) || [];
+        var remainder = line.replace(EMAIL_RE, "");
+        // Accept bare recipient lists or a single display-name address.
+        if (addresses.length && (/^[\s<>(),;]*$/.test(remainder) ||
+            (addresses.length === 1 && /^[^<>:;]+<[^<>]+>$/.test(line)))) {
+          addresses.forEach(add); return;
+        }
+      }
+      if (line) { failureList = false; }
+      // Short diagnostics put the recipient immediately before/after the
+      // failure phrase. Match that recipient only, never the whole sentence.
+      var address = "([A-Za-z0-9._%+'-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})";
+      var before = new RegExp("(?:delivery (?:has )?failed(?: to)?|failed for)\\s*:?\\s*<?" + address, "gi");
+      var after = new RegExp("(?:Recipient\\s+)?<?" + address + ">?\\s+(?:could not be reached|failed\\b|does not exist\\b|rejected\\b)", "gi");
+      var match;
+      while ((match = before.exec(line))) { add(match[1]); }
+      while ((match = after.exec(line))) { add(match[1]); }
     });
     return hits;
   }
@@ -197,13 +241,15 @@
       var email = norm(m.mail || m.userPrincipalName);
       var b = bounced[email] || null;
       var last = seenAt[email] || null;
+      // Later participation is stronger evidence than an older failed send.
+      var currentBounce = b && !(last && last.date > b.date);
       return {
         id: m.id,
         name: m.displayName || email,
         email: email,
         bounce: b,
         lastSeen: last,
-        status: b ? "bounced" : (last ? "active" : "unknown"),
+        status: currentBounce ? "bounced" : (last ? "active" : "unknown"),
         groupSendCount: sends.length,
       };
     });

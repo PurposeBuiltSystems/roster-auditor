@@ -312,7 +312,7 @@
       var nb = rows.filter(function (r) { return r.status === "bounced"; }).length;
       var nu = rows.filter(function (r) { return r.status === "unknown"; }).length;
       var sends = rows.length ? rows[0].groupSendCount : 0;
-      setStatus("info", rows.length + " members · " + nb + " bouncing · " + nu +
+      setStatus("info", rows.length + " members · " + nb + " delivery failures · " + nu +
         " engagement unknown · evidence: " + sends + " group sends, " +
         meetings.length + " attendance reports, " + ndrs.length + " NDRs (" + months + " mo).");
     } catch (e) {
@@ -327,7 +327,7 @@
 
   function statusChip(r) {
     if (r.status === "bounced") {
-      return { cls: "chip-bounce", text: "⚠️ bouncing since " + r.bounce.date.slice(0, 10) };
+      return { cls: "chip-bounce", text: "⚠️ delivery failed " + r.bounce.date.slice(0, 10) };
     }
     if (r.status === "active") {
       var label = { manual: "in person", teams: "Teams meeting", reply: "replied" }[r.lastSeen.signal];

@@ -4,8 +4,8 @@ Outlook add-in that finds the ghosts on your group rosters. Pick a Microsoft
 365 group or distribution list you belong to and it cross-references the
 member list against four participation signals you already possess:
 
-1. **Bounced sends (NDRs)** — the definitive signal: the address is dead,
-   not just quiet. Bouncing members surface first.
+1. **Bounced sends (NDRs)** — recognized delivery failures to review,
+   not proof that an address is dead. Later participation supersedes older failures.
 2. **In-person attendance you record** — a one-click "Present ✓" grid for
    sign-in-sheet meetings, saved in your own mailbox settings.
 3. **Teams meeting attendance** — Microsoft Graph attendance reports, which

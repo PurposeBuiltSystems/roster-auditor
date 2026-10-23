@@ -69,6 +69,19 @@ check("NDR case-insensitive match",
 
 /* -------------------------------------------------------------- group sends */
 
+check("NDR quoted original recipients are not failed recipients",
+  A.ndrFailedRecipients({ body: { content: "Delivery has failed to ann@example.com. Diagnostic: 550 5.1.1 recipient not found. Original message: To: ann@example.com; bob@example.com" } }, roster),
+  ["ann@example.com"]);
+check("NDR structured records exclude successful and delayed recipients",
+  A.ndrFailedRecipients({ body: { content: "Final-Recipient: rfc822; ann@example.com\nAction: failed\nStatus: 5.1.1\n\nFinal-Recipient: rfc822; bob@example.com\nAction: delivered\nStatus: 2.0.0\n\nFinal-Recipient: rfc822; carol@agency.gov\nAction: delayed\nStatus: 4.2.2" } }, roster),
+  ["ann@example.com"]);
+check("NDR bare roster mentions and subject matches are not evidence",
+  A.ndrFailedRecipients({ subject: "Undeliverable: question about ann@example.com", bodyPreview: "For help contact bob@example.com" }, roster), []);
+check("NDR failure list stops at explanatory prose and original headers",
+  A.ndrFailedRecipients({ body: { content: "<p>Delivery has failed to these recipients or groups:</p><p>ann@example.com</p><p>For help contact bob@example.com</p><p>Original message headers:</p><p>carol@agency.gov</p>" } }, roster), ["ann@example.com"]);
+check("NDR structured recipient without failed action is uncertain",
+  A.ndrFailedRecipients({ bodyPreview: "Final-Recipient: rfc822; ann@example.com\nDiagnostic-Code: smtp; failed for bob@example.com" }, roster), []);
+
 function to(addr) { return { emailAddress: { address: addr } }; }
 
 var sent = [
@@ -152,6 +165,11 @@ var rowsBounce = A.buildParticipation({
 });
 check("bounce outranks attendance", rowsBounce[0].status, "bounced");
 check("bounce keeps lastSeen evidence", rowsBounce[0].lastSeen.signal, "teams");
+var recovered = A.buildParticipation({ roster: [fullRoster[0]],
+  ndrs: [{ receivedDateTime: "2026-07-01T08:00:00Z", bodyPreview: "ann@example.com failed" }],
+  manual: { "ann@example.com": ["2026-07-20"] } });
+check("newer participation supersedes an old bounce", recovered[0].status, "active");
+check("old bounce remains available as history", recovered[0].bounce.date, "2026-07-01T08:00:00Z");
 
 // member with no mail (nested group / odd object) survives with UPN fallback
 var rowsUpn = A.buildParticipation({
